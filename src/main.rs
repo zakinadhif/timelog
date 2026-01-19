@@ -24,8 +24,7 @@ impl HelloWorld {
             &input,
             window,
             move |_view, input, event, window, cx| match event {
-                InputEvent::PressEnter { secondary } => {
-                    println!("Enter pressed, secondary: {}", secondary);
+                InputEvent::PressEnter { .. } => {
                     let now = SystemTime::now()
                         .duration_since(UNIX_EPOCH)
                         .unwrap()
@@ -68,7 +67,7 @@ impl Render for HelloWorld {
                 .h_flex()
                 .gap_2()
                 .child(time_str)
-                .child(msg.clone())
+                .child(div().child(msg.clone()).pl_1())
         });
 
         div()
