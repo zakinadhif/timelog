@@ -5,6 +5,7 @@ use gpui_component::{
     input::{Input, InputEvent, InputState}, 
     *
 };
+use rfd::FileDialog;
 use std::fs::{File, OpenOptions};
 use std::io::{BufRead, BufReader, Write};
 use std::path::PathBuf;
@@ -45,9 +46,17 @@ impl App {
     }
 
     fn load_session(&mut self, window: &mut Window, cx: &mut Context<Self>) {
-        // TODO: In the future, this should open a file picker dialog to allow users
-        // to select an existing timelog file instead of always using the default.
-        self.open_session(window, cx, DEFAULT_TIMELOG_FILE);
+        // Open a file picker dialog to allow users to select an existing timelog file
+        if let Some(file_path) = FileDialog::new()
+            .add_filter("Text files", &["txt"])
+            .add_filter("All files", &["*"])
+            .set_title("Select a timelog file")
+            .pick_file()
+        {
+            if let Some(path_str) = file_path.to_str() {
+                self.open_session(window, cx, path_str);
+            }
+        }
     }
 }
 
