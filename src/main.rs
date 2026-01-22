@@ -1,26 +1,117 @@
 use chrono::{Local, TimeZone};
 use gpui::{Size, *};
 use gpui_component::{
-    input::{Input, InputEvent, InputState}, *
+    button::Button,
+    input::{Input, InputEvent, InputState}, 
+    *
 };
 use std::fs::{File, OpenOptions};
 use std::io::{BufRead, BufReader, Write};
+use std::path::PathBuf;
 use std::time::{SystemTime, UNIX_EPOCH};
 
 const BG_COLOR: u32 = 0x1f1e21;
 
-pub struct HelloWorld {
+enum AppScreen {
+    Home,
+    Timelog,
+}
+
+pub struct App {
+    screen: AppScreen,
+    timelog_view: Option<Entity<TimelogView>>,
+    file_path: Option<PathBuf>,
+}
+
+impl App {
+    fn new(_window: &mut Window, _cx: &mut Context<Self>) -> Self {
+        Self {
+            screen: AppScreen::Home,
+            timelog_view: None,
+            file_path: None,
+        }
+    }
+
+    fn start_new_session(&mut self, window: &mut Window, cx: &mut Context<Self>) {
+        self.file_path = Some(PathBuf::from("timelog.txt"));
+        self.timelog_view = Some(cx.new(|cx| TimelogView::new(window, cx, "timelog.txt")));
+        self.screen = AppScreen::Timelog;
+        cx.notify();
+    }
+
+    fn load_session(&mut self, window: &mut Window, cx: &mut Context<Self>) {
+        // For now, load the default file - in a full implementation, this would open a file picker
+        self.file_path = Some(PathBuf::from("timelog.txt"));
+        self.timelog_view = Some(cx.new(|cx| TimelogView::new(window, cx, "timelog.txt")));
+        self.screen = AppScreen::Timelog;
+        cx.notify();
+    }
+}
+
+impl Render for App {
+    fn render(&mut self, window: &mut Window, cx: &mut Context<Self>) -> impl IntoElement {
+        match self.screen {
+            AppScreen::Home => {
+                self.render_home(window, cx)
+            }
+            AppScreen::Timelog => {
+                if let Some(timelog_view) = &self.timelog_view {
+                    div()
+                        .size_full()
+                        .child(timelog_view.clone())
+                } else {
+                    self.render_home(window, cx)
+                }
+            }
+        }
+    }
+}
+
+impl App {
+    fn render_home(&mut self, _window: &mut Window, cx: &mut Context<Self>) -> Div {
+        div()
+            .v_flex()
+            .items_center()
+            .justify_center()
+            .size_full()
+            .font_family("Consolas")
+            .bg(rgb(BG_COLOR))
+            .gap_4()
+            .child(
+                div()
+                    .text_size(px(24.0))
+                    .text_color(rgb(0xffffff))
+                    .child("Timelog")
+            )
+            .child(
+                Button::new("new-session")
+                    .label("New Session")
+                    .on_click(cx.listener(|this, _: &ClickEvent, window, cx| {
+                        this.start_new_session(window, cx);
+                    }))
+            )
+            .child(
+                Button::new("load-session")
+                    .label("Load Session")
+                    .on_click(cx.listener(|this, _: &ClickEvent, window, cx| {
+                        this.load_session(window, cx);
+                    }))
+            )
+    }
+}
+
+pub struct TimelogView {
     logs: Entity<Vec<(u128, SharedString)>>,
     input: Entity<InputState>,
     _input_subscription: Subscription,
 }
 
-impl HelloWorld {
-    fn new(window: &mut Window, cx: &mut Context<Self>) -> Self {
+impl TimelogView {
+    fn new(window: &mut Window, cx: &mut Context<Self>, file_path: &str) -> Self {
         let input = cx.new(|cx| InputState::new(window, cx));
         let mut loaded_logs = Vec::new();
 
-        if let Ok(file) = File::open("timelog.txt") {
+        if let Ok(file) = File::open(file_path) {
             let reader = BufReader::new(file);
             for line in reader.lines() {
                 if let Ok(line) = line {
@@ -48,6 +139,7 @@ impl HelloWorld {
         }
 
         let logs = cx.new(|_| loaded_logs);
+        let file_path_clone = file_path.to_string();
 
         let logs_handle = logs.clone();
         let input_subscription = cx.subscribe_in(
@@ -65,7 +157,7 @@ impl HelloWorld {
                     if let Ok(mut file) = OpenOptions::new()
                         .create(true)
                         .append(true)
-                        .open("timelog.txt")
+                        .open(&file_path_clone)
                     {
                         let time_str = Local
                             .timestamp_millis_opt(now as i64)
@@ -98,7 +190,7 @@ impl HelloWorld {
     }
 }
 
-impl Render for HelloWorld {
+impl Render for TimelogView {
     fn render(&mut self, _: &mut Window, cx: &mut Context<Self>) -> impl IntoElement {
         let logs = self.logs.read(cx);
 
@@ -171,7 +263,7 @@ fn main() {
                     tabbing_identifier: None,
                 },
                 |window, cx| {
-                    let view = cx.new(|cx| HelloWorld::new(window, cx));
+                    let view = cx.new(|cx| App::new(window, cx));
                     cx.new(|cx| Root::new(view, window, cx))
                 },
             )?;
