@@ -11,6 +11,7 @@ use std::path::PathBuf;
 use std::time::{SystemTime, UNIX_EPOCH};
 
 const BG_COLOR: u32 = 0x1f1e21;
+const DEFAULT_TIMELOG_FILE: &str = "timelog.txt";
 
 enum AppScreen {
     Home,
@@ -32,19 +33,21 @@ impl App {
         }
     }
 
-    fn start_new_session(&mut self, window: &mut Window, cx: &mut Context<Self>) {
-        self.file_path = Some(PathBuf::from("timelog.txt"));
-        self.timelog_view = Some(cx.new(|cx| TimelogView::new(window, cx, "timelog.txt")));
+    fn open_session(&mut self, window: &mut Window, cx: &mut Context<Self>, file_path: &str) {
+        self.file_path = Some(PathBuf::from(file_path));
+        self.timelog_view = Some(cx.new(|cx| TimelogView::new(window, cx, file_path)));
         self.screen = AppScreen::Timelog;
         cx.notify();
     }
 
+    fn start_new_session(&mut self, window: &mut Window, cx: &mut Context<Self>) {
+        self.open_session(window, cx, DEFAULT_TIMELOG_FILE);
+    }
+
     fn load_session(&mut self, window: &mut Window, cx: &mut Context<Self>) {
-        // For now, load the default file - in a full implementation, this would open a file picker
-        self.file_path = Some(PathBuf::from("timelog.txt"));
-        self.timelog_view = Some(cx.new(|cx| TimelogView::new(window, cx, "timelog.txt")));
-        self.screen = AppScreen::Timelog;
-        cx.notify();
+        // TODO: In the future, this should open a file picker dialog to allow users
+        // to select an existing timelog file instead of always using the default.
+        self.open_session(window, cx, DEFAULT_TIMELOG_FILE);
     }
 }
 
@@ -104,6 +107,7 @@ pub struct TimelogView {
     logs: Entity<Vec<(u128, SharedString)>>,
     input: Entity<InputState>,
     _input_subscription: Subscription,
+    _file_path: PathBuf,
 }
 
 impl TimelogView {
@@ -139,9 +143,10 @@ impl TimelogView {
         }
 
         let logs = cx.new(|_| loaded_logs);
-        let file_path_clone = file_path.to_string();
+        let file_path_buf = PathBuf::from(file_path);
 
         let logs_handle = logs.clone();
+        let file_path_clone = file_path_buf.clone();
         let input_subscription = cx.subscribe_in(
             &input,
             window,
@@ -186,6 +191,7 @@ impl TimelogView {
             logs,
             input,
             _input_subscription: input_subscription,
+            _file_path: file_path_buf,
         }
     }
 }
