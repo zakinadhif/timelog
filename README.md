@@ -1,6 +1,6 @@
 # Timelog
 
-Timelog is a simple, efficient devlog and decision-making tracking tool built with Rust and [GPUI](https://www.gpui.rs/). It provides a clean interface for maintaining a chronological journal of your development process, thoughts, and decisions.
+Timelog is a simple, efficient and decision-making tracking tool built in Rust using the [GPUI](https://www.gpui.rs/) framework. It provides a distraction-free interface for logging generic timestamped entries, making it ideal for developers to track their train of thought, decisions made during coding sessions, or general work logs.
 
 ## Features
 
@@ -9,48 +9,54 @@ Timelog is a simple, efficient devlog and decision-making tracking tool built wi
 - **Session Management**: Start a new session or load existing logs from any text file.
 - **Clean UI**: A minimal, dark-themed interface designed for focus.
 - **Keyboard-Driven**: Quickly add entries by typing and pressing Enter.
+- **GPUI Powered**: Built with the high-performance GPUI framework for a responsive native experience.
 
 ## Getting Started
 
 ### Prerequisites
 
-- [Rust](https://www.rust-lang.org/tools/install) (latest stable)
+- [Rust](https://www.rust-lang.org/tools/install) (latest stable version)
+- A platform supported by GPUI (macOS, Linux, Windows)
 
-### Running the Application
+### Installation
 
-1. Clone the repository:
-   ```bash
-   git clone https://github.com/yourusername/timelog.git
-   cd timelog
-   ```
+Clone the repository and run the project using Cargo:
 
-2. Run with Cargo:
-   ```bash
-   cargo run
-   ```
+```bash
+git clone <repository_url>
+cd timelog
+cargo run
+```
 
 ## Usage
 
-1. **New Session**: Click "New Session" to start logging to the default `timelog.txt` file in the current directory.
-2. **Load Session**: Click "Load Session" to open a file picker and select an existing log file.
-3. **Logging**: 
-   - Type your thought, code change, or decision in the input field at the bottom.
-   - Press **Enter** to save.
-   - The entry will be appended to the file and displayed in the view.
+1. **Launch the Application**: Run `cargo run`.
+2. **Start a Session**:
+   - Click **"New Session"** to open/create `timelog.txt` in the current directory.
+   - Click **"Load Session"** to browse for an existing text file.
+3. **Log Entries**:
+   - Type your thought or update in the input field at the bottom.
+   - Press `Enter` to submit.
+   - The entry will be displayed in the list and saved to the file immediately.
 
 ## File Format
 
-Entries are stored in a simple, human-readable format:
+Files are stored in a simple plain text format:
 
 ```text
 [YYYY-MM-DD HH:MM:SS] Your log message here
-[2024-03-20 10:15:30] Started working on the new feature
-[2024-03-20 10:45:00] Decided to use GPUI for the frontend because of its performance
+[2026-01-22 09:42:56] Hello
+[2026-01-22 11:27:29] Refactoring the main loop
 ```
 
-## Tech Stack
+## Technologies
 
 - **Language**: Rust
 - **UI Framework**: GPUI
 - **Components**: `gpui-component`
 - **Time Handling**: `chrono`
+- **File Dialogs**: `rfd`
+
+## License
+
+[MIT](LICENSE)
