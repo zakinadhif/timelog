@@ -254,14 +254,17 @@ impl Render for TimelogView {
 
 fn main() {
     // Initialize the global hotkey manager
-    let hotkeys_manager = GlobalHotKeyManager::new().expect("Failed to initialize global hotkey manager");
+    // Store it in a Box to ensure it lives for the duration of the application
+    let _hotkeys_manager = Box::leak(Box::new(
+        GlobalHotKeyManager::new().expect("Failed to initialize global hotkey manager")
+    ));
     
     // Create the hotkey: Cmd+Shift+T on macOS, Ctrl+Shift+T on Windows/Linux
     let hotkey = HotKey::new(Some(CMD_OR_CTRL | Modifiers::SHIFT), Code::KeyT);
     let hotkey_id = hotkey.id();
     
     // Register the hotkey
-    hotkeys_manager
+    _hotkeys_manager
         .register(hotkey)
         .expect("Failed to register global hotkey");
     
@@ -307,11 +310,15 @@ fn main() {
         })
         .detach();
         
-        // Set up a background task to listen for hotkey events using a timer
+        // Set up a background task to listen for hotkey events
+        // We use try_recv with a small timeout to avoid blocking GPUI's event loop
+        // while still being responsive to hotkey events
         cx.spawn(async move |cx| {
             use gpui::Timer;
+            let receiver = GlobalHotKeyEvent::receiver();
             loop {
-                if let Ok(event) = GlobalHotKeyEvent::receiver().try_recv() {
+                // Check for hotkey events with a non-blocking receive
+                if let Ok(event) = receiver.try_recv() {
                     if event.id == hotkey_id {
                         // Try to activate and focus the application window
                         let _ = cx.update(|cx| {
@@ -320,8 +327,8 @@ fn main() {
                         });
                     }
                 }
-                // Small delay to avoid busy waiting - check every 100ms
-                Timer::after(std::time::Duration::from_millis(100)).await;
+                // Small delay to avoid busy waiting - check every 50ms for better responsiveness
+                Timer::after(std::time::Duration::from_millis(50)).await;
             }
         })
         .detach();
