@@ -49,13 +49,12 @@ impl App {
         // Open a file picker dialog to allow users to select an existing timelog file
         if let Some(file_path) = FileDialog::new()
             .add_filter("Text files", &["txt"])
-            .add_filter("All files", &["*"])
             .set_title("Select a timelog file")
             .pick_file()
         {
-            if let Some(path_str) = file_path.to_str() {
-                self.open_session(window, cx, path_str);
-            }
+            // Use to_string_lossy to handle paths with non-UTF-8 characters
+            let path_str = file_path.to_string_lossy();
+            self.open_session(window, cx, &path_str);
         }
     }
 }
