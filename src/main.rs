@@ -259,7 +259,7 @@ fn main() {
                 WindowOptions {
                     window_bounds: Some(bounds),
                     titlebar: Some(TitlebarOptions {
-                        title: Default::default(),
+                        title: Some("Timelog".into()),
                         appears_transparent: Default::default(),
                         traffic_light_position: Default::default(),
                     }),
@@ -275,6 +275,7 @@ fn main() {
                     window_min_size: None,
                     window_decorations: None,
                     tabbing_identifier: None,
+
                 },
                 |window, cx| {
                     let view = cx.new(|cx| App::new(window, cx));
