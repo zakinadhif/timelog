@@ -253,26 +253,28 @@ impl Render for TimelogView {
 }
 
 fn main() {
-    // Initialize the global hotkey manager
-    // Store it in a Box to ensure it lives for the duration of the application
-    let _hotkeys_manager = Box::leak(Box::new(
-        GlobalHotKeyManager::new().expect("Failed to initialize global hotkey manager")
-    ));
-    
-    // Create the hotkey: Cmd+Shift+T on macOS, Ctrl+Shift+T on Windows/Linux
-    let hotkey = HotKey::new(Some(CMD_OR_CTRL | Modifiers::SHIFT), Code::KeyT);
-    let hotkey_id = hotkey.id();
-    
-    // Register the hotkey
-    _hotkeys_manager
-        .register(hotkey)
-        .expect("Failed to register global hotkey");
-    
-    println!("Global hotkey registered: {}+Shift+T", if cfg!(target_os = "macos") { "Cmd" } else { "Ctrl" });
-    println!("Press the hotkey to show/focus the Timelog window");
-
-    Application::new().run(move |cx| {
+    Application::new().run(|cx| {
         gpui_component::init(cx);
+
+        // Initialize the global hotkey manager INSIDE the event loop
+        // This is required for proper platform event loop integration
+        let hotkeys_manager = GlobalHotKeyManager::new().expect("Failed to initialize global hotkey manager");
+        
+        // Create the hotkey: Cmd+Shift+T on macOS, Ctrl+Shift+T on Windows/Linux
+        let hotkey = HotKey::new(Some(CMD_OR_CTRL | Modifiers::SHIFT), Code::KeyT);
+        let hotkey_id = hotkey.id();
+        
+        // Register the hotkey
+        hotkeys_manager
+            .register(hotkey)
+            .expect("Failed to register global hotkey");
+        
+        println!("Global hotkey registered: {}+Shift+T", if cfg!(target_os = "macos") { "Cmd" } else { "Ctrl" });
+        println!("Press the hotkey to show/focus the Timelog window");
+        
+        // Store the hotkey manager to keep it alive
+        // We leak it to ensure it persists for the application lifetime
+        let _hotkeys_manager = Box::leak(Box::new(hotkeys_manager));
 
         let size: Size<Pixels> = Size { width: Pixels::from(600.0), height: Pixels::from(800.0) };
         let bounds = WindowBounds::centered(size, cx);
