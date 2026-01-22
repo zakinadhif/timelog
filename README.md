@@ -1,6 +1,6 @@
 # Timelog
 
-Timelog is a simple, efficient and decision-making tracking tool built in Rust using the [GPUI](https://www.gpui.rs/) framework. It provides a distraction-free interface for logging generic timestamped entries, making it ideal for developers to track their train of thought, decisions made during coding sessions, or general work logs.
+Timelog is a simple and efficient decision-making tracking tool built in Rust using the [GPUI](https://www.gpui.rs/) framework. It provides a distraction-free interface for logging generic timestamped entries, making it ideal for developers to track their train of thought, decisions made during coding sessions, or general work logs.
 
 ## Features
 
