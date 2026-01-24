@@ -9,6 +9,7 @@ Timelog is a simple and efficient decision-making tracking tool built in Rust us
 - **Session Management**: Start a new session or load existing logs from any text file.
 - **Clean UI**: A minimal, dark-themed interface designed for focus.
 - **Keyboard-Driven**: Quickly add entries by typing and pressing Enter.
+- **Global Hotkey**: Press `Ctrl+Shift+T` (Windows/Linux) or `Cmd+Shift+T` (macOS) to quickly show and focus the Timelog window from anywhere.
 - **GPUI Powered**: Built with the high-performance GPUI framework for a responsive native experience.
 
 ## Getting Started
@@ -31,10 +32,11 @@ cargo run
 ## Usage
 
 1. **Launch the Application**: Run `cargo run`.
-2. **Start a Session**:
+2. **Global Hotkey**: Press `Ctrl+Shift+T` (Windows/Linux) or `Cmd+Shift+T` (macOS) to show/focus the window at any time.
+3. **Start a Session**:
    - Click **"New Session"** to open/create `timelog.txt` in the current directory.
    - Click **"Load Session"** to browse for an existing text file.
-3. **Log Entries**:
+4. **Log Entries**:
    - Type your thought or update in the input field at the bottom.
    - Press `Enter` to submit.
    - The entry will be displayed in the list and saved to the file immediately.
@@ -56,6 +58,7 @@ Files are stored in a simple plain text format:
 - **Components**: `gpui-component`
 - **Time Handling**: `chrono`
 - **File Dialogs**: `rfd`
+- **Global Hotkeys**: `global-hotkey`
 
 ## License
 

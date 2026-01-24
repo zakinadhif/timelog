@@ -1,4 +1,8 @@
 use chrono::{Local, TimeZone};
+use global_hotkey::{
+    hotkey::{Code, HotKey, Modifiers, CMD_OR_CTRL},
+    GlobalHotKeyEvent, GlobalHotKeyManager,
+};
 use gpui::{Size, *};
 use gpui_component::{
     button::Button,
@@ -252,8 +256,30 @@ fn main() {
     Application::new().run(|cx| {
         gpui_component::init(cx);
 
+        // Initialize the global hotkey manager INSIDE the event loop
+        // This is required for proper platform event loop integration
+        let hotkeys_manager = GlobalHotKeyManager::new().expect("Failed to initialize global hotkey manager");
+        
+        // Create the hotkey: Cmd+Shift+T on macOS, Ctrl+Shift+T on Windows/Linux
+        let hotkey = HotKey::new(Some(CMD_OR_CTRL | Modifiers::SHIFT), Code::KeyT);
+        let hotkey_id = hotkey.id();
+        
+        // Register the hotkey
+        hotkeys_manager
+            .register(hotkey)
+            .expect("Failed to register global hotkey");
+        
+        println!("Global hotkey registered: {}+Shift+T", if cfg!(target_os = "macos") { "Cmd" } else { "Ctrl" });
+        println!("Press the hotkey to show/focus the Timelog window");
+        
+        // Store the hotkey manager to keep it alive
+        // We leak it to ensure it persists for the application lifetime
+        let _hotkeys_manager = Box::leak(Box::new(hotkeys_manager));
+
         let size: Size<Pixels> = Size { width: Pixels::from(600.0), height: Pixels::from(800.0) };
         let bounds = WindowBounds::centered(size, cx);
+        
+        // Open the main window
         cx.spawn(async move |cx| {
             cx.open_window(
                 WindowOptions {
@@ -284,6 +310,29 @@ fn main() {
             )?;
 
             Ok::<_, anyhow::Error>(())
+        })
+        .detach();
+        
+        // Set up a background task to listen for hotkey events
+        // We use try_recv with a small timeout to avoid blocking GPUI's event loop
+        // while still being responsive to hotkey events
+        cx.spawn(async move |cx| {
+            use gpui::Timer;
+            let receiver = GlobalHotKeyEvent::receiver();
+            loop {
+                // Check for hotkey events with a non-blocking receive
+                if let Ok(event) = receiver.try_recv() {
+                    if event.id == hotkey_id {
+                        // Try to activate and focus the application window
+                        let _ = cx.update(|cx| {
+                            // Activate the application to bring all windows to front
+                            cx.activate(true);
+                        });
+                    }
+                }
+                // Small delay to avoid busy waiting - check every 50ms for better responsiveness
+                Timer::after(std::time::Duration::from_millis(50)).await;
+            }
         })
         .detach();
     });
